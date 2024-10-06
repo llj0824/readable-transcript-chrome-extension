@@ -1,16 +1,16 @@
+// llm_api_utils.js
+
+// Class definition remains the same
+
 class LLM_API_Utils {
   constructor() {
     this.anthropic_api_key = '';
     this.openai_api_key = '';
-    this.openai_endpoint = "https://api.openai.com/v1/chat/completions"; // Updated for GPT-4
-    this.anthropic_endpoint = "https://api.anthropic.com/v1/complete"; // Adjust if different
-
-    // Initialize OpenAI client if needed
-    // Note: In JavaScript, you typically use fetch instead of a client library
+    this.openai_endpoint = "https://api.openai.com/v1/chat/completions";
+    this.anthropic_endpoint = "https://api.anthropic.com/v1/complete";
   }
 
-  // Load API keys from Chrome storage
-  loadApiKeys() {
+  async loadApiKeys() {
     return new Promise((resolve) => {
       chrome.storage.sync.get(['openai_api_key', 'anthropic_api_key'], (result) => {
         this.openai_api_key = result.openai_api_key || '';
@@ -20,8 +20,7 @@ class LLM_API_Utils {
     });
   }
 
-  // Save API keys to Chrome storage
-  static saveApiKeys(openaiKey, anthropicKey) {
+  static async saveApiKeys(openaiKey, anthropicKey) {
     return new Promise((resolve) => {
       chrome.storage.sync.set({
         openai_api_key: openaiKey,
@@ -32,8 +31,7 @@ class LLM_API_Utils {
     });
   }
 
-  // Call OpenAI GPT-4 API
-  async call_gpt4(system_role, prompt, model = "chatgpt-4o-latest", max_tokens = 16000, temperature = 0.1) {
+  async call_gpt4(system_role, prompt, model = "gpt-4", max_tokens = 1000, temperature = 0.7) {
     if (!this.openai_api_key) {
       throw new Error("OpenAI API key is not set.");
     }
@@ -66,7 +64,6 @@ class LLM_API_Utils {
     return data.choices[0].message.content.trim();
   }
 
-  // Call Anthropic's Claude API
   async call_claude(system_role, prompt, model = "claude-3-5-sonnet-20240620", max_tokens = 4000, temperature = 0.5) {
     if (!this.anthropic_api_key) {
       throw new Error("Anthropic API key is not set.");
@@ -100,13 +97,11 @@ class LLM_API_Utils {
     return data.completion.trim();
   }
 
-  // Unified method to call either OpenAI or Claude based on the model_name
   async call_llm(model_name, system_role, prompt, max_tokens = 4000, temperature = 0.5) {
     try {
       if (model_name.toLowerCase().startsWith("claude")) {
         return await this.call_claude(system_role, prompt, model_name, max_tokens, temperature);
       } else {
-        // Default to OpenAI if model name doesn't start with "claude"
         return await this.call_gpt4(system_role, prompt, model_name, max_tokens, temperature);
       }
     } catch (error) {
@@ -116,6 +111,5 @@ class LLM_API_Utils {
   }
 }
 
-// Export the class for use in popup.js
-// Note: Since popup.js and llm_api_utils.js are in the same directory, we can use ES6 modules
-// Ensure to update manifest.json to allow module scripts if necessary
+// Export the LLM_API_Utils class
+export { LLM_API_Utils };
