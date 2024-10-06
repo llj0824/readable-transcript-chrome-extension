@@ -1,0 +1,139 @@
+/* popup/popup.css */
+
+body {
+  font-family: Arial, sans-serif;
+  width: 400px;
+  margin: 0;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+h2, h3 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+#transcript-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#transcript-section button {
+  padding: 5px 10px;
+  margin: 0 10px;
+}
+
+#content-section {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 10px;
+  cursor: pointer;
+  background-color: #fff;
+  border: none;
+  outline: none;
+  transition: background-color 0.3s;
+}
+
+.tab-button:hover {
+  background-color: #f0f0f0;
+}
+
+.tab-button.active {
+  background-color: #e0e0e0;
+}
+
+.tab-content {
+  padding: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.hidden {
+  display: none;
+}
+
+#actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+#process-btn {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+#loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #555;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+#api-section {
+  margin-top: 15px;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+}
+
+#api-key-inputs {
+  display: flex;
+  flex-direction: column;
+}
+
+.api-key-group {
+  margin-bottom: 10px;
+}
+
+.api-key-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.api-key-group input {
+  width: 100%;
+  padding: 5px;
+}
+
+#save-keys-btn {
+  padding: 5px;
+  cursor: pointer;
+}
+
+#model-selection {
+  margin-top: 10px;
+}
+
+#model-selection label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+#model-select {
+  width: 100%;
+  padding: 5px;
+}
