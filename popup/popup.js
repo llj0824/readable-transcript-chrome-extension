@@ -1,6 +1,7 @@
 // popup/popup.js
 
 import { LLM_API_Utils } from './llm_api_utils.js';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 const transcriptDisplay = document.getElementById('transcript-display');
 const processedDisplay = document.getElementById('processed-display');
@@ -20,25 +21,58 @@ const modelSelect = document.getElementById('model-select');
 let transcript = [];
 let segments = [];
 let currentSegmentIndex = 0;
-const segmentDuration = 20 * 60; // 20 minutes in seconds
+const SEGMENT_DURATION = 20 * 60; // 20 minutes in seconds
 
-let llmUtils = new LLM_API_Utils();
+const llmUtils = new LLM_API_Utils();
 
 // Initialize the popup
-document.addEventListener('DOMContentLoaded', async () => {
-  await llmUtils.loadApiKeys();
-  loadApiKeysIntoUI();
-  fetchTranscript();
-  setupTabs();
-  setupPagination();
-  setupProcessButton();
-  setupSaveKeysButton();
-});
+document.addEventListener('DOMContentLoaded', initializePopup);
+
+async function initializePopup() {
+  try {
+    await llmUtils.loadApiKeys();
+    loadApiKeysIntoUI();
+    const videoId = await getCurrentVideoId();
+    if (videoId) {
+      await fetchTranscript(videoId);
+      parseTranscript(transcript);
+      paginateTranscript();
+      displaySegment();
+      updatePaginationButtons();
+    } else {
+      console.error('Video ID not found.');
+      transcriptDisplay.textContent = 'Unable to retrieve video ID.';
+    }
+    setupTabs();
+    setupPagination();
+    setupProcessButton();
+    setupSaveKeysButton();
+  } catch (error) {
+    console.error('Error initializing popup:', error);
+    transcriptDisplay.textContent = 'Error initializing popup.';
+  }
+}
+
+// Retrieve the current video ID from the active tab
+async function getCurrentVideoId() {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length === 0) {
+        resolve(null);
+        return;
+      }
+      const tab = tabs[0];
+      const url = new URL(tab.url);
+      const videoId = url.searchParams.get('v');
+      resolve(videoId);
+    });
+  });
+}
 
 // Load API keys from storage and populate the UI
 function loadApiKeysIntoUI() {
-  openaiApiKeyInput.value = llmUtils.openai_api_key;
-  anthropicApiKeyInput.value = llmUtils.anthropic_api_key;
+  openaiApiKeyInput.value = llmUtils.openai_api_key || '';
+  anthropicApiKeyInput.value = llmUtils.anthropic_api_key || '';
 }
 
 // Save API keys to storage
@@ -47,37 +81,36 @@ function setupSaveKeysButton() {
     const openaiKey = openaiApiKeyInput.value.trim();
     const anthropicKey = anthropicApiKeyInput.value.trim();
 
-    await LLM_API_Utils.saveApiKeys(openaiKey, anthropicKey);
-    await llmUtils.loadApiKeys(); // Reload the keys into the instance
-
-    alert('API Keys saved successfully!');
+    try {
+      await LLM_API_Utils.saveApiKeys(openaiKey, anthropicKey);
+      await llmUtils.loadApiKeys(); // Reload the keys into the instance
+      alert('API Keys saved successfully!');
+    } catch (error) {
+      console.error('Error saving API keys:', error);
+      alert('Failed to save API Keys.');
+    }
   });
 }
 
-// Fetch transcript from the content script
-function fetchTranscript() {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { action: "getTranscript" }, (response) => {
-      if (response && response.transcript) {
-        parseTranscript(response.transcript);
-        paginateTranscript();
-        displaySegment();
-        updatePaginationButtons();
-      } else {
-        transcriptDisplay.textContent = "Transcript not available.";
-      }
-    });
-  });
+// Function to fetch and process the transcript
+async function fetchTranscript(videoId) {
+  try {
+    const fetchedTranscript = await YoutubeTranscript.fetchTranscript(videoId);
+    transcript = fetchedTranscript.map(item => `[${formatTimestamp(item.start)}] ${item.text}`).join('\n');
+    console.log(transcript);
+  } catch (error) {
+    console.error('Error fetching transcript:', error);
+    transcriptDisplay.textContent = 'Error fetching transcript.';
+  }
 }
 
 // Parse the raw transcript into an array of objects with timestamp and text
 function parseTranscript(rawTranscript) {
-  const lines = rawTranscript.split('\n');
-  transcript = lines.map(line => {
+  transcript = rawTranscript.split('\n').map(line => {
     const match = line.match(/\[(\d+):(\d+)\]\s*(.*)/);
     if (match) {
-      const minutes = parseInt(match[1]);
-      const seconds = parseInt(match[2]);
+      const minutes = parseInt(match[1], 10);
+      const seconds = parseInt(match[2], 10);
       const timeInSeconds = minutes * 60 + seconds;
       return {
         timestamp: timeInSeconds,
@@ -91,18 +124,18 @@ function parseTranscript(rawTranscript) {
 // Paginate the transcript into 20-minute segments
 function paginateTranscript() {
   segments = [];
-  let segmentStart = 0;
-  let segmentEnd = segmentDuration;
+  let segmentStartIndex = 0;
 
-  while (segmentStart < transcript.length) {
-    let endIndex = transcript.findIndex(item => item.timestamp > segmentEnd, segmentStart);
-    if (endIndex === -1) {
-      endIndex = transcript.length;
-    }
-    const segment = transcript.slice(segmentStart, endIndex).map(item => `[${formatTime(item.timestamp)}] ${item.text}`).join('\n');
+  while (segmentStartIndex < transcript.length) {
+    const segmentEndTime = transcript[segmentStartIndex].timestamp + SEGMENT_DURATION;
+    let endIndex = transcript.findIndex(item => item.timestamp > segmentEndTime, segmentStartIndex);
+    if (endIndex === -1) endIndex = transcript.length;
+
+    const segment = transcript.slice(segmentStartIndex, endIndex)
+      .map(item => `[${formatTime(item.timestamp)}] ${item.text}`)
+      .join('\n');
     segments.push(segment);
-    segmentStart = endIndex;
-    segmentEnd += segmentDuration;
+    segmentStartIndex = endIndex;
   }
 
   if (segments.length === 0) {
@@ -110,7 +143,7 @@ function paginateTranscript() {
   }
 
   currentSegmentIndex = 0;
-  segmentInfo.textContent = `Segment ${currentSegmentIndex + 1} of ${segments.length}`;
+  updateSegmentInfo();
 }
 
 // Format time from seconds to mm:ss
@@ -170,7 +203,10 @@ function setupTabs() {
       button.classList.add('active');
       // Show corresponding tab content
       const tab = button.getAttribute('data-tab');
-      document.getElementById(tab).classList.remove('hidden');
+      const tabContent = document.getElementById(tab);
+      if (tabContent) {
+        tabContent.classList.remove('hidden');
+      }
     });
   });
 }
@@ -195,9 +231,16 @@ function setupProcessButton() {
       processedDisplay.textContent = processedOutput;
     } catch (error) {
       processedDisplay.textContent = "Error processing with LLM.";
-      console.error(error);
+      console.error('LLM processing error:', error);
     } finally {
       loader.classList.add('hidden');
     }
   });
+}
+
+// Format timestamp in seconds to mm:ss
+function formatTimestamp(startSeconds) {
+  const mins = Math.floor(startSeconds / 60);
+  const secs = Math.floor(startSeconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }

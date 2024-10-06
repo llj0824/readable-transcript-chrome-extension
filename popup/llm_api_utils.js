@@ -31,7 +31,7 @@ class LLM_API_Utils {
     });
   }
 
-  async call_gpt4(system_role, prompt, model = "gpt-4", max_tokens = 1000, temperature = 0.7) {
+  async call_gpt4(system_role, prompt, model = "chatgpt-4o-latest", max_tokens = 1000, temperature = 0.7) {
     if (!this.openai_api_key) {
       throw new Error("OpenAI API key is not set.");
     }

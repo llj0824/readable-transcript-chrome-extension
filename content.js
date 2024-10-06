@@ -1,15 +1,13 @@
-
 function extractTranscript() {
   const transcriptLines = document.querySelectorAll('ytd-transcript-segment-renderer');
-  let transcriptArray = [];
+  const transcriptArray = [];
 
   transcriptLines.forEach((line) => {
-    let timestampElement = line.querySelector('.segment-timestamp');
-    let textElement = line.querySelector('.segment-text');
+    const timestampElement = line.querySelector('.segment-timestamp');
+    const textElement = line.querySelector('.segment-text');
 
-    // Safeguard to avoid null errors
-    let timestamp = timestampElement ? timestampElement.innerText : '';
-    let words = textElement ? textElement.innerText : '';
+    const timestamp = timestampElement ? timestampElement.innerText.trim() : '';
+    const words = textElement ? textElement.innerText.trim() : '';
 
     if (timestamp && words) {
       transcriptArray.push(`[${timestamp}] ${words}`);
