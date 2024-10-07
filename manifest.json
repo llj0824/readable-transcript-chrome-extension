@@ -17,16 +17,23 @@
     }
   },
   "background": {
-    "service_worker": "dist/bundle.js"  // Ensure this is the correct path for your service worker
+    "service_worker": "dist/background.bundle.js" // Updated service worker path
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["dist/bundle.js"]  // Ensure this is appropriate for your content script logic
+      "matches": ["https://www.youtube.com/watch*"],
+      "js": ["dist/content.bundle.js"] // Updated content script path
     }
   ],
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage" // Added storage permission if not already present
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["dist/popup.bundle.js"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
