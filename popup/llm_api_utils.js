@@ -1,20 +1,33 @@
 // llm_api_utils.js
 
+import fs from 'fs';
+
 // Class definition remains the same
 
 class LLM_API_Utils {
   constructor() {
-    this.anthropic_api_key = '';
-    this.openai_api_key = '';
+    const config = this.loadConfig();
+    this.anthropic_api_key = config.anthropic_api_key || '';
+    this.openai_api_key = config.openai_api_key || '';
     this.openai_endpoint = "https://api.openai.com/v1/chat/completions";
     this.anthropic_endpoint = "https://api.anthropic.com/v1/complete";
+  }
+
+  loadConfig() {
+    try {
+      const data = fs.readFileSync('config.json', 'utf8');
+      return JSON.parse(data);
+    } catch (error) {
+      console.error("Error reading config file:", error);
+      return {};
+    }
   }
 
   async loadApiKeys() {
     return new Promise((resolve) => {
       chrome.storage.sync.get(['openai_api_key', 'anthropic_api_key'], (result) => {
-        this.openai_api_key = result.openai_api_key || '';
-        this.anthropic_api_key = result.anthropic_api_key || '';
+        this.openai_api_key = result.openai_api_key || this.openai_api_key;
+        this.anthropic_api_key = result.anthropic_api_key || this.anthropic_api_key;
         resolve();
       });
     });
