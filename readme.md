@@ -1,12 +1,13 @@
-# YouTube Transcript Manager Extension
+# Automatic Professional Copyedited YouTube Transcripts Chrome Extension
 
-This browser extension allows users to manually input YouTube video transcripts, paginate them into segments, and process them using Large Language Models (LLMs) for summarization and analysis.
+This Chrome extension automatically retrieves and provides high-quality, professionally copyedited transcripts of YouTube videos. Users can either upload their own transcripts or automatically pull transcripts directly from YouTube videos, ensuring accurate and polished text for analysis and reference.
 
 ## Features
 
-- **Manual Transcript Input:** Users can input their own transcripts instead of relying on automatic retrieval.
-- **Segmented Display:** Transcripts are divided into manageable segments (e.g., 20-minute intervals).
-- **LLM Integration:** Process transcript segments with selected LLMs for summarization and analysis.
+- **Automatic Transcript Retrieval:** Automatically fetch transcripts from YouTube videos without manual intervention.
+- **Manual Transcript Upload:** Option to manually upload your own transcripts if preferred.
+- **Professional Copyediting:** Provides high-quality, professionally edited transcripts for clarity and accuracy.
+- **Segmented Display:** Transcripts are divided into manageable segments (e.g., 20-minute intervals) for easy navigation.
 - **API Key Management:** Securely save and manage API keys for OpenAI and Anthropic.
 
 ## Installation
@@ -18,14 +19,16 @@ This browser extension allows users to manually input YouTube video transcripts,
 ## Usage
 
 1. Open the extension popup.
-2. Input your transcript in the provided textarea.
-3. Select the desired LLM model.
-4. Process the transcript segment to view the summarized output.
+2. Choose to either:
+    - **Automatically Retrieve Transcript:** Select a YouTube video to fetch its transcript automatically.
+    - **Manually Upload Transcript:** Upload your own transcript file.
+3. View the professionally copyedited transcript segments.
+4. (Optional) Manage and process transcripts using integrated LLM tools for further analysis.
 
 ## Configuration
 
 - **API Keys:** Enter your OpenAI and Anthropic API keys in the designated fields and save them.
-- **Model Selection:** Choose from available LLM models to process your transcript.
+- **Model Selection:** Choose from available LLM models to enhance or analyze your transcripts.
 
 ## Contributing
 
