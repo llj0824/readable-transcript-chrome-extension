@@ -1,7 +1,6 @@
 // popup/popup.js
 
 import { LLM_API_Utils } from './llm_api_utils.js';
-import { YoutubeTranscript } from 'youtube-transcript';
 
 const transcriptDisplay = document.getElementById('transcript-display');
 const processedDisplay = document.getElementById('processed-display');
@@ -17,6 +16,8 @@ const openaiApiKeyInput = document.getElementById('openai-api-key');
 const anthropicApiKeyInput = document.getElementById('anthropic-api-key');
 const saveKeysBtn = document.getElementById('save-keys-btn');
 const modelSelect = document.getElementById('model-select');
+const transcriptInput = document.getElementById('transcript-input');
+const loadTranscriptBtn = document.getElementById('load-transcript-btn');
 
 let transcript = [];
 let segments = [];
@@ -32,41 +33,15 @@ async function initializePopup() {
   try {
     await llmUtils.loadApiKeys();
     loadApiKeysIntoUI();
-    const videoId = await getCurrentVideoId();
-    if (videoId) {
-      await fetchTranscript(videoId);
-      parseTranscript(transcript);
-      paginateTranscript();
-      displaySegment();
-      updatePaginationButtons();
-    } else {
-      console.error('Video ID not found.');
-      transcriptDisplay.textContent = 'Unable to retrieve video ID.';
-    }
     setupTabs();
     setupPagination();
     setupProcessButton();
     setupSaveKeysButton();
+    setupLoadTranscriptButton();
   } catch (error) {
     console.error('Error initializing popup:', error);
     transcriptDisplay.textContent = 'Error initializing popup.';
   }
-}
-
-// Retrieve the current video ID from the active tab
-async function getCurrentVideoId() {
-  return new Promise((resolve, reject) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs.length === 0) {
-        resolve(null);
-        return;
-      }
-      const tab = tabs[0];
-      const url = new URL(tab.url);
-      const videoId = url.searchParams.get('v');
-      resolve(videoId);
-    });
-  });
 }
 
 // Load API keys from storage and populate the UI
@@ -92,17 +67,23 @@ function setupSaveKeysButton() {
   });
 }
 
-// Function to fetch and process the transcript
-async function fetchTranscript(videoId) {
-  try {
-    const fetchedTranscript = await YoutubeTranscript.fetchTranscript(videoId);
-    transcript = fetchedTranscript.map(item => `[${formatTimestamp(item.start)}] ${item.text}`).join('\n');
-    console.log(transcript);
-  } catch (error) {
-    console.error('Error fetching transcript:', error);
-    transcriptDisplay.textContent = 'Error fetching transcript.';
-  }
+// Setup load transcript button event
+function setupLoadTranscriptButton() {
+  loadTranscriptBtn.addEventListener('click', () => {
+    const rawTranscript = transcriptInput.value.trim();
+    if (!rawTranscript) {
+      alert('Please enter a transcript.');
+      return;
+    }
+    parseTranscript(rawTranscript);
+    paginateTranscript();
+    displaySegment();
+    updatePaginationButtons();
+    alert('Transcript loaded successfully!');
+  });
 }
+
+// Function to fetch and process the transcript (Removed automatic retrieval)
 
 // Parse the raw transcript into an array of objects with timestamp and text
 function parseTranscript(rawTranscript) {
